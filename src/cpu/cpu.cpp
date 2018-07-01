@@ -134,6 +134,7 @@ void CPU::OP(byte op)
 		case 0xFB:
 		{
 			IME_scheduled = 1;
+			CLOCK += 4;
 		} break;
 		// ALU 8-bit CCF, SCF, DAA, CPL
 		case 0x3F: m_alu->CCF(); break;
