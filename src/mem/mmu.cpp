@@ -1,6 +1,6 @@
 #include "mmu.h"
 #include <stdexcept>
-#include "3rd party/mlibc_log.h"
+#include "3rdparty/mlibc_log.h"
 #include "bootrom.h"
 #include "memory_area.h"
 #include "rom.h"

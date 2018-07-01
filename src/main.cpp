@@ -1,5 +1,5 @@
 #include <iostream>
-#include "3rd party/mlibc_log.h"
+#include "3rdparty/mlibc_log.h"
 #include "mem/memory_area.h"
 #include "mem/rom.h"
 #include "mem/ram.h"

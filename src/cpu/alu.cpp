@@ -1,5 +1,5 @@
 #include "alu.h"
-#include "3rd party/mlibc_log.h"
+#include "3rdparty/mlibc_log.h"
 #include "cpu/cpu.h"
 #include "cpu/cpu_registers.h"
 #include "cpu/cpu_state.h"

@@ -1,7 +1,7 @@
 #include "rom.h"
 #include <stdexcept>
 #include <cstring>
-#include "3rd party/mlibc_log.h"
+#include "3rdparty/mlibc_log.h"
 
 namespace hgb
 {
