@@ -24,163 +24,14 @@ ALU::~ALU()
 	mlibc_dbg("ALU::~ALU()");
 }
 
-void ALU::AND(byte reg)
-{
-	m_registers.A = m_registers.A & reg;
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.setH();
-	m_registers.clearC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::OR(byte reg)
-{
-	m_registers.A = m_registers.A | reg;
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.clearH();
-	m_registers.clearC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::XOR(byte reg)
-{
-	m_registers.A = m_registers.A ^ reg;
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.clearH();
-	m_registers.clearC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::CP(byte reg)
-{
-	m_registers.A = m_registers.A == reg;
-	m_registers.flipZ();
-	m_registers.setN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::INC(word & reg)
-{
-	reg = reg + 1;
-	m_state.CLOCK += 8;
-}
-
-void ALU::INC(byte & reg)
-{
-	reg = reg + 1;
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.flipH();
-	m_state.CLOCK += 4;
-}
-
-void ALU::INC16(word addr)
-{
-	byte val = m_mmu->read(addr);
-	val = val + 1;
-	m_mmu->write(addr, val);
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.flipH();
-	m_state.CLOCK += 12;
-}
-
-void ALU::DEC(word & reg)
-{
-	reg = reg - 1;
-	m_state.CLOCK += 8;
-}
-
-void ALU::DEC(byte & reg)
-{
-	reg = reg - 1;
-	m_registers.flipZ();
-	m_registers.setN();
-	m_registers.flipH();
-	m_state.CLOCK += 4;
-}
-
-void ALU::DEC16(word addr)
-{
-	byte val = m_mmu->read(addr);
-	val = val - 1;
-	m_mmu->write(addr, val);
-	m_registers.flipZ();
-	m_registers.setN();
-	m_registers.flipH();
-	m_state.CLOCK += 12;
-}
-
-void ALU::ADD(byte & reg1, byte reg2)
-{
-	reg1 = reg1 + reg2;
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::ADC(byte & reg1, byte reg2)
-{
-	reg1 = reg1 + reg2 + (m_registers.F & CPUR_F_C);
-	m_registers.flipZ();
-	m_registers.clearN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::SUB(byte & reg1, byte reg2)
-{
-	reg1 = reg1 - reg2;
-	m_registers.flipZ();
-	m_registers.setN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::SBC(byte & reg1, byte reg2)
-{
-	reg1 = reg1 - reg2 - (m_registers.F & CPUR_F_C);
-	m_registers.flipZ();
-	m_registers.setN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
-}
-
-void ALU::ADD(word & reg1, word reg2)
-{
-	reg1 = reg1 + reg2;
-	m_registers.clearN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 8;
-}
-
-void ALU::ADD_SP_r8(int8_t r)
-{
-	m_registers.SP = m_registers.SP + r;
-	m_registers.clearZ();
-	m_registers.clearN();
-	m_registers.flipH();
-	m_registers.flipC();
-	m_state.CLOCK += 16;
-}
-
 void ALU::CCF()
 {
 	m_registers.clearN();
 	m_registers.clearH();
-	m_registers.flipC();
-	m_state.CLOCK += 4;
+
+	// TODO: Verify this works!
+	if (!m_registers.checkC())
+		m_registers.setC();
 }
 
 void ALU::SCF()
@@ -188,22 +39,306 @@ void ALU::SCF()
 	m_registers.clearN();
 	m_registers.clearH();
 	m_registers.setC();
-	m_state.CLOCK += 4;
 }
 
 void ALU::DAA()
 {
+	// TODO: Implement!
+}
+
+void ALU::CPL()
+{
+	m_registers.setN();
+	m_registers.setH();
+}
+
+void ALU::AND(byte val, int c)
+{
+	m_registers.A &= val;
+
+	if (m_registers.A == 1)
+		m_registers.clearZ();
+
+	m_registers.clearN();
+	m_registers.setH();
+	m_registers.clearC();
+
+	m_state.CLOCK += c;
+}
+
+void ALU::OR(byte val, int c)
+{
+	m_registers.A |= val;
+
+	if (m_registers.A == 1)
+		m_registers.clearZ();
+
+	m_registers.clearN();
+	m_registers.clearH();
+	m_registers.clearC();
+
+	m_state.CLOCK += c;
+}
+
+void ALU::XOR(byte val, int c)
+{
+	m_registers.A ^= val;
+
+	if (m_registers.A == 1)
+		m_registers.clearZ();
+
+	m_registers.clearN();
+	m_registers.clearH();
+	m_registers.clearC();
+
+	m_state.CLOCK += c;
+}
+
+void ALU::CP(byte val, int c)
+{
+	word result = static_cast<word>(m_registers.A) - static_cast<word>(val);
+
+	if (result == 0x0000)
+		m_registers.setZ();
+
+	m_registers.setN();
+
+	if ((m_registers.A & 0x0F) < (val & 0x0F))
+		m_registers.setH();
+
+	if (m_registers.A < val)
+		m_registers.setC();
+
+	m_state.CLOCK += c;
+}
+
+void ALU::INC(word & val, int c)
+{
+	val++;
+	m_state.CLOCK += 4;
+	m_state.CLOCK += c;
+}
+
+void ALU::INC(byte & val, int c)
+{
+	byte result = val + 1;
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.clearN();
+
+	if ((val & 0x0F) == 0x0F)
+		m_registers.setH();
+
+	val = result;
+
+	m_state.CLOCK += c;
+}
+
+void ALU::INC_ADDR(word addr, int c)
+{
+	byte val = m_mmu->read(addr);
+	byte result = val + 1;
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.clearN();
+
+	if ((val & 0x0F) == 0x0F)
+		m_registers.setH();
+
+	m_mmu->write(addr, result);
+
+	m_state.CLOCK += 8;
+	m_state.CLOCK += c;
+}
+
+void ALU::DEC(word & val, int c)
+{
+	val--;
+	m_state.CLOCK += 4;
+	m_state.CLOCK += c;
+}
+
+void ALU::DEC(byte & val, int c)
+{
+	byte result = val - 1;
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.setN();
+
+	if ((val & 0x0F) == 0x00)
+		m_registers.setH();
+
+	val = result;
+
+	m_state.CLOCK += c;
+}
+
+void ALU::DEC_ADDR(word addr, int c)
+{
+	byte val = m_mmu->read(addr);
+	byte result = val - 1;
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.clearN();
+
+	if ((val & 0x0F) == 0x00)
+		m_registers.setH();
+
+	m_mmu->write(addr, result);
+
+	m_state.CLOCK += 8;
+	m_state.CLOCK += c;
+}
+
+void ALU::ADD(word & val, word n, int c)
+{
+	word result = val + n;
+
+	m_registers.clearN();
+
+	// TODO: Verify this works!
+	if ((val & 0x0FFF) == 0x0FFF)
+		m_registers.setH();
+
+	// TODO: Verify this works!
+	if ((val & 0xFFFF) == 0xFFFF)
+		m_registers.setC();
+
+	val = result;
+
+	m_state.CLOCK += 4;
+	m_state.CLOCK += c;
+}
+
+void ALU::ADD(byte & val, byte n, int c)
+{
+	byte result = val + n;
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.clearN();
+
+	// TODO: Verify this works!
+	if ((val & 0x0F) == 0x0F)
+		m_registers.setH();
+
+	// TODO: Verify this works!
+	if ((val & 0xFF) == 0xFF)
+		m_registers.setC();
+
+	val = result;
+
+	m_state.CLOCK += c;
+}
+
+void ALU::ADC(byte & val, byte n, int c)
+{
+	byte result = val + (n + CPUR_F_C);
+
+	if (result == 0x00)
+		m_registers.setZ();
+
+	m_registers.clearN();
+
+	// TODO: Verify this works!
+	if ((val & 0x0F) == 0x0F)
+		m_registers.setH();
+
+	// TODO: Verify this works!
+	if ((val & 0xFF) == 0xFF)
+		m_registers.setC();
+
+	val = result;
+
+	m_state.CLOCK += c;
+}
+
+void ALU::SUB(byte & val, byte n, int c)
+{
+	word result = static_cast<word>(val) - static_cast<word>(n);
+
+	if (result == 0x0000)
+		m_registers.setZ();
+
+	m_registers.setN();
+
+	if ((val & 0x0F) < (n & 0x0F))
+		m_registers.setH();
+
+	if (val < n)
+		m_registers.setC();
+
+	val = static_cast<byte>(result);
+
+	m_state.CLOCK += c;
+}
+
+void ALU::SBC(byte & val, byte n, int c)
+{
+	word result = static_cast<word>(val) - static_cast<word>(n + CPUR_F_C);
+
+	if (result == 0x0000)
+		m_registers.setZ();
+
+	m_registers.setN();
+
+	if ((val & 0x0F) < (n & 0x0F))
+		m_registers.setH();
+
+	if (val < n)
+		m_registers.setC();
+
+	val = static_cast<byte>(result);
+
+	m_state.CLOCK += c;
+}
+
+void ALU::ADD_SP_r8(int8_t n)
+{
+	word result = m_registers.SP + n;
+
+	m_registers.clearZ();
+	m_registers.clearN();
+
+	// TODO: Verify this works!
+	if ((m_registers.SP & 0x0FFF) == 0x0FFF)
+		m_registers.setH();
+
+	// TODO: Verify this works!
+	if ((m_registers.SP & 0xFFFF) == 0xFFFF)
+		m_registers.setC();
+
+	m_registers.SP = result;
+
+	m_state.CLOCK += 12;
+}
+
+void ALU::RL(byte & reg)
+{
+	reg = (reg << 1) | (m_registers.F & CPUR_F_C);
 	m_registers.flipZ();
+	m_registers.clearN();
 	m_registers.clearH();
 	m_registers.flipC();
 	m_state.CLOCK += 4;
 }
 
-void ALU::CPL()
+void ALU::RLC(byte & reg)
 {
-	m_registers.A = ~m_registers.A; // flip A
-	m_registers.setN();
-	m_registers.setH();
+	reg = (reg << 1) | (m_registers.F & CPUR_F_C);
+	m_registers.flipZ();
+	m_registers.clearN();
+	m_registers.clearH();
+	m_registers.flipC();
 	m_state.CLOCK += 4;
 }
 

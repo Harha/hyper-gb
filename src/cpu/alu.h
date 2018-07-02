@@ -19,46 +19,28 @@ public:
 	);
 	~ALU();
 
-	// AND, 8-bit register
-	void AND(byte reg);
-	// OR, 8-bit register
-	void OR(byte reg);
-	// XOR, 8-bit register
-	void XOR(byte reg);
-	// CP, 8-bit register
-	void CP(byte reg);
-	// INC, 16-bit register
-	void INC(word & reg);
-	// INC, 8-bit register
-	void INC(byte & reg);
-	// INC, 16-bit address's 8-bit value
-	void INC16(word addr);
-	// DEC, 16-bit register
-	void DEC(word & reg);
-	// DEC, 8-bit register
-	void DEC(byte & reg);
-	// DEC, 16-bit address's 8-bit value
-	void DEC16(word addr);
-	// ADD, 8-bit register to 8-bit register
-	void ADD(byte & reg1, byte reg2);
-	// ADC, 8-bit register to 8-bit register
-	void ADC(byte & reg1, byte reg2);
-	// SUB, 8-bit register from 8-bit register
-	void SUB(byte & reg1, byte reg2);
-	// SBC, 8-bit register from 8-bit register
-	void SBC(byte & reg1, byte reg2);
-	// ADD, 16-bit register to 16-bit register
-	void ADD(word & reg1, word reg2);
-	// ADD, 8-bit value to 16-bit SP register
-	void ADD_SP_r8(int8_t r);
-	// CCF
 	void CCF();
-	// SCF
 	void SCF();
-	// DAA
 	void DAA();
-	// CPL
 	void CPL();
+	void AND(byte val, int c = 0);
+	void OR(byte val, int c = 0);
+	void XOR(byte val, int c = 0);
+	void CP(byte val, int c = 0);
+	void INC(word & val, int c = 0);
+	void INC(byte & val, int c = 0);
+	void INC_ADDR(word addr, int c = 0);
+	void DEC(word & val, int c = 0);
+	void DEC(byte & val, int c = 0);
+	void DEC_ADDR(word val, int c = 0);
+	void ADD(word & val, word n, int c = 0);
+	void ADD(byte & val, byte n, int c = 0);
+	void ADC(byte & val, byte n, int c = 0);
+	void SUB(byte & val, byte n, int c = 0);
+	void SBC(byte & val, byte n, int c = 0);
+	void ADD_SP_r8(int8_t n);
+	void RL(byte & reg);
+	void RLC(byte & reg);
 private:
 	CPU * m_cpu;
 	CPURegisters & m_registers;

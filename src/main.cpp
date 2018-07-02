@@ -23,7 +23,7 @@ int main(int argc, char * argv[])
 	hgb::CPU * cpu = new hgb::CPU;
 
 	// Run the CPU for n instructions
-	for (size_t i = 0; i < 1028; i++)
+	for (size_t i = 0; i < 50000; i++)
 	{
 		cpu->tick();
 	}

@@ -76,7 +76,7 @@ MemoryArea * MMU::map(word addr)
 	if (addr >= MMU_ROM_BANK_0 && addr < MMU_ROM_BANK_X)
 	{
 		// Map to boot ROM if enabled
-		if (addr <= MMU_ROM_BOOT_E && m_io->getByte(MMU_REG_BOOT) != 0x01)
+		if (addr <= MMU_ROM_BOOT_E && m_io->read(MMU_REG_BOOT) != 0x01)
 			return m_bootrom;
 
 		// Otherwise map to normal ROM
@@ -116,7 +116,17 @@ MemoryArea * MMU::map(word addr)
 
 byte MMU::read(word addr)
 {
-	return map(addr)->getByte(addr);
+	// Get memory area mapped to this address
+	MemoryArea * memory_area = map(addr);
+
+	// Check if mapped memory_area is non-existent
+	if (memory_area == nullptr)
+	{
+		mlibc_wrn("MMU::read(...), warning! Tried to read from 0x%04zx which maps to a nullptr!", addr);
+		return 0x00;
+	}
+
+	return memory_area->read(addr);
 }
 
 void MMU::write(word addr, byte value)
@@ -124,21 +134,21 @@ void MMU::write(word addr, byte value)
 	// Get memory area mapped to this address
 	MemoryArea * memory_area = map(addr);
 
-	// Check if mapped memory area returned is pointing to null
+	// Check if mapped memory_area is non-existent
 	if (memory_area == nullptr)
 	{
-		mlibc_wrn("MMU::write(...), warning! Tried to write to 0x%04zx which maps to a NULL memory area!", addr);
+		mlibc_wrn("MMU::write(...), warning! Tried to write to 0x%04zx which maps to a nullptr!", addr);
 		return;
 	}
 
 	// Disallow writing to $FF50 after boot sequence
-	if (addr == MMU_REG_BOOT && m_io->getByte(MMU_REG_BOOT) == 0x01)
+	if (addr == MMU_REG_BOOT && m_io->read(MMU_REG_BOOT) == 0x01)
 	{
-		mlibc_wrn("MMU::setByte(...), warning! Tried to write to $FF50 after bootstrap!");
+		mlibc_wrn("MMU::write(...), warning! Tried to write to $FF50 after bootstrap!");
 		return;
 	}
 
-	memory_area->setByte(addr, value);
+	memory_area->write(addr, value);
 }
 
 MemoryArea * MMU::getBootROM()

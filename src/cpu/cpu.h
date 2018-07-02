@@ -22,18 +22,15 @@ public:
 	// Run the CPU, one instruction at a time
 	void tick();
 	// Handle normal opcode
-	void OP(byte op);
+	void op(byte op);
 	// Handle PREFIX CB opcode
-	void CB(byte op);
-	// load 16-bit value to target 16-bit register
-	void LD(int c, word & dst, word src);
-	// load 8-bit value to target 16-bit address
-	void LD(word addr, byte val);
-	// load 8-bit value to target 8-bit register
-	void LD(byte & reg, byte val);
-	// map RST opcode to fixed 8-bit address
+	void cb(byte op);
+
+	void LD(word & val, word n, int c = 0);
+	void LD(byte & val, byte n, int c = 0);
+	void LD_ADDR(word addr, byte n, int c = 0);
+	void LD_HL_SP_r8(int8_t n);
 	byte RST(byte op);
-	// CB BIT n, 8-bit register
 	void BIT(int n, byte & reg);
 
 	CPURegisters & getRegisters();

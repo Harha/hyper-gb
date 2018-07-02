@@ -15,12 +15,12 @@ RAM::RAM(
 
 }
 
-byte RAM::getByte(word addr)
+byte RAM::read(word addr)
 {
 	return m_memory[map(addr)];
 }
 
-void RAM::setByte(word addr, byte value)
+void RAM::write(word addr, byte value)
 {
 	m_memory[map(addr)] = value;
 }

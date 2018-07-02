@@ -18,12 +18,12 @@ ROM::ROM(
 
 }
 
-byte ROM::getByte(word addr)
+byte ROM::read(word addr)
 {
 	return m_memory[map(addr)];
 }
 
-void ROM::setByte(word addr, byte value)
+void ROM::write(word addr, byte value)
 {
 	throw std::runtime_error("ROM::setByte(...), error! Tried to modify read-only memory!");
 }

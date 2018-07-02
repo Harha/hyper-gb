@@ -14,8 +14,8 @@ public:
 		size_t size = 0x2000
 	);
 
-	virtual byte getByte(word addr) override;
-	virtual void setByte(word addr, byte value) override;
+	virtual byte read(word addr) override;
+	virtual void write(word addr, byte value) override;
 };
 
 }

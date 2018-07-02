@@ -6,7 +6,7 @@
 namespace hgb
 {
 
-// Status flags register bitmasks
+// Flag register bitmasks
 #define CPUR_F_Z	0b10000000	// zero flag
 #define CPUR_F_ZN	0b01111111	// zero flag inverted
 #define CPUR_F_N	0b01000000	// subtract flag
@@ -20,7 +20,7 @@ namespace hgb
 
 struct CPURegisters
 {
-	// Accumulator and Status flags, access as 16-bit uint or individual 8-bit uints
+	// Accumulator and status flags, access as 16-bit uint or individual 8-bit uints
 	union
 	{
 		struct
@@ -138,6 +138,26 @@ struct CPURegisters
 		F = ~(F & CPUR_F_C) & F;
 	}
 
+	inline bool checkZ()
+	{
+		return (F & CPUR_F_Z) == CPUR_F_Z;
+	}
+
+	inline bool checkN()
+	{
+		return (F & CPUR_F_N) == CPUR_F_N;
+	}
+
+	inline bool checkH()
+	{
+		return (F & CPUR_F_H) == CPUR_F_H;
+	}
+
+	inline bool checkC()
+	{
+		return (F & CPUR_F_C) == CPUR_F_C;
+	}
+
 	// Check flag condition based on OPCODE
 	inline bool checkFlag(word op)
 	{
@@ -151,7 +171,7 @@ struct CPURegisters
 			case 0xC4:
 			case 0xC0:
 			{
-				result = (F & CPUR_F_Z) != CPUR_F_Z;
+				return !checkZ();
 			} break;
 			// NC (check if C is not set)
 			case 0xD2:
@@ -159,7 +179,7 @@ struct CPURegisters
 			case 0xD4:
 			case 0xD0:
 			{
-				result = (F & CPUR_F_C) != CPUR_F_C;
+				return !checkC();
 			} break;
 			// Z (check if Z is set)
 			case 0xCA:
@@ -167,7 +187,7 @@ struct CPURegisters
 			case 0xCC:
 			case 0xC8:
 			{
-				result = (F & CPUR_F_Z) == CPUR_F_Z;
+				return checkZ();
 			} break;
 			// C (check if C is set)
 			case 0xDA:
@@ -175,7 +195,7 @@ struct CPURegisters
 			case 0xDC:
 			case 0xD8:
 			{
-				return (F & CPUR_F_C) == CPUR_F_C;
+				return checkC();
 			} break;
 		}
 

@@ -18,9 +18,9 @@ public:
 	// Get a true pointer to target data inside the memory area
 	virtual word map(word addr);
 	// Get a byte from the MemoryArea at specified 16-bit address
-	virtual byte getByte(word addr) = 0;
+	virtual byte read(word addr) = 0;
 	// Set a byte in the MemoryArea at specified 16-bit address
-	virtual void setByte(word addr, byte value) = 0;
+	virtual void write(word addr, byte value) = 0;
 
 	virtual word getAddress();
 	virtual size_t getSize();
