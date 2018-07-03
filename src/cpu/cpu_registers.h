@@ -25,7 +25,7 @@ struct CPURegisters
 	{
 		struct
 		{
-			byte A, F;
+			byte F, A;
 		};
 		struct
 		{
@@ -38,7 +38,7 @@ struct CPURegisters
 	{
 		struct
 		{
-			byte B, C;
+			byte C, B;
 		};
 		struct
 		{
@@ -51,7 +51,7 @@ struct CPURegisters
 	{
 		struct
 		{
-			byte D, E;
+			byte E, D;
 		};
 		struct
 		{
@@ -64,7 +64,7 @@ struct CPURegisters
 	{
 		struct
 		{
-			byte H, L;
+			byte L, H;
 		};
 		struct
 		{
@@ -140,22 +140,22 @@ struct CPURegisters
 
 	inline bool checkZ()
 	{
-		return (F & CPUR_F_Z) == CPUR_F_Z;
+		return (F & CPUR_F_Z) != 0x00;
 	}
 
 	inline bool checkN()
 	{
-		return (F & CPUR_F_N) == CPUR_F_N;
+		return (F & CPUR_F_N) > 0x00;
 	}
 
 	inline bool checkH()
 	{
-		return (F & CPUR_F_H) == CPUR_F_H;
+		return (F & CPUR_F_H) > 0x00;
 	}
 
 	inline bool checkC()
 	{
-		return (F & CPUR_F_C) == CPUR_F_C;
+		return (F & CPUR_F_C) > 0x00;
 	}
 
 	// Check flag condition based on OPCODE

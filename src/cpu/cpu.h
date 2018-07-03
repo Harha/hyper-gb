@@ -1,7 +1,7 @@
 #ifndef CPU_H
 #define CPU_H
 
-#include <map>
+#include <vector>
 #include "cpu_registers.h"
 #include "cpu_state.h"
 
@@ -14,7 +14,9 @@ class ALU;
 class CPU
 {
 public:
-	CPU();
+	CPU(
+		std::vector<word> breakpoints = std::vector<word>()
+	);
 	~CPU();
 
 	// Initialize the CPU
@@ -38,6 +40,7 @@ public:
 	MMU * getMMU();
 	ALU * getALU();
 private:
+	std::vector<word> m_breakpoints;
 	CPURegisters m_registers;
 	CPUState m_state;
 	MMU * m_mmu;

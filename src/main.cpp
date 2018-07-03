@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "3rdparty/mlibc_log.h"
 #include "mem/memory_area.h"
 #include "mem/rom.h"
@@ -20,10 +21,12 @@ int main(int argc, char * argv[])
 	}
 	mlibc_inf("::main(), mlibc_log_init successful.");
 
-	hgb::CPU * cpu = new hgb::CPU;
+	std::vector<word> breakpoints;
+	breakpoints.push_back(0x0068);
+	hgb::CPU * cpu = new hgb::CPU(breakpoints);
 
 	// Run the CPU for n instructions
-	for (size_t i = 0; i < 50000; i++)
+	for (size_t i = 0; i < 100000; i++)
 	{
 		cpu->tick();
 	}

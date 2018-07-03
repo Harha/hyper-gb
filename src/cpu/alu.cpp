@@ -32,6 +32,8 @@ void ALU::CCF()
 	// TODO: Verify this works!
 	if (!m_registers.checkC())
 		m_registers.setC();
+	else
+		m_registers.clearC();
 }
 
 void ALU::SCF()
@@ -58,6 +60,8 @@ void ALU::AND(byte val, int c)
 
 	if (m_registers.A == 1)
 		m_registers.clearZ();
+	else
+		m_registers.setZ();
 
 	m_registers.clearN();
 	m_registers.setH();
@@ -72,6 +76,8 @@ void ALU::OR(byte val, int c)
 
 	if (m_registers.A == 1)
 		m_registers.clearZ();
+	else
+		m_registers.setZ();
 
 	m_registers.clearN();
 	m_registers.clearH();
@@ -86,6 +92,8 @@ void ALU::XOR(byte val, int c)
 
 	if (m_registers.A == 1)
 		m_registers.clearZ();
+	else
+		m_registers.setZ();
 
 	m_registers.clearN();
 	m_registers.clearH();
@@ -100,14 +108,20 @@ void ALU::CP(byte val, int c)
 
 	if (result == 0x0000)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.setN();
 
 	if ((m_registers.A & 0x0F) < (val & 0x0F))
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	if (m_registers.A < val)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	m_state.CLOCK += c;
 }
@@ -125,11 +139,15 @@ void ALU::INC(byte & val, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.clearN();
 
 	if ((val & 0x0F) == 0x0F)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	val = result;
 
@@ -143,11 +161,15 @@ void ALU::INC_ADDR(word addr, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.clearN();
 
 	if ((val & 0x0F) == 0x0F)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	m_mmu->write(addr, result);
 
@@ -168,11 +190,15 @@ void ALU::DEC(byte & val, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.setN();
 
 	if ((val & 0x0F) == 0x00)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	val = result;
 
@@ -186,11 +212,15 @@ void ALU::DEC_ADDR(word addr, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.clearN();
 
 	if ((val & 0x0F) == 0x00)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	m_mmu->write(addr, result);
 
@@ -207,10 +237,14 @@ void ALU::ADD(word & val, word n, int c)
 	// TODO: Verify this works!
 	if ((val & 0x0FFF) == 0x0FFF)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	// TODO: Verify this works!
 	if ((val & 0xFFFF) == 0xFFFF)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	val = result;
 
@@ -224,16 +258,20 @@ void ALU::ADD(byte & val, byte n, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.clearN();
 
 	// TODO: Verify this works!
 	if ((val & 0x0F) == 0x0F)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	// TODO: Verify this works!
 	if ((val & 0xFF) == 0xFF)
-		m_registers.setC();
+		m_registers.clearC();
 
 	val = result;
 
@@ -246,16 +284,22 @@ void ALU::ADC(byte & val, byte n, int c)
 
 	if (result == 0x00)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.clearN();
 
 	// TODO: Verify this works!
 	if ((val & 0x0F) == 0x0F)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	// TODO: Verify this works!
 	if ((val & 0xFF) == 0xFF)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	val = result;
 
@@ -268,14 +312,20 @@ void ALU::SUB(byte & val, byte n, int c)
 
 	if (result == 0x0000)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.setN();
 
 	if ((val & 0x0F) < (n & 0x0F))
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	if (val < n)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	val = static_cast<byte>(result);
 
@@ -288,14 +338,20 @@ void ALU::SBC(byte & val, byte n, int c)
 
 	if (result == 0x0000)
 		m_registers.setZ();
+	else
+		m_registers.clearZ();
 
 	m_registers.setN();
 
 	if ((val & 0x0F) < (n & 0x0F))
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	if (val < n)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	val = static_cast<byte>(result);
 
@@ -312,10 +368,14 @@ void ALU::ADD_SP_r8(int8_t n)
 	// TODO: Verify this works!
 	if ((m_registers.SP & 0x0FFF) == 0x0FFF)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	// TODO: Verify this works!
 	if ((m_registers.SP & 0xFFFF) == 0xFFFF)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	m_registers.SP = result;
 

@@ -7,7 +7,10 @@
 namespace hgb
 {
 
-CPU::CPU() :
+CPU::CPU(
+	std::vector<word> breakpoints
+) :
+	m_breakpoints(breakpoints),
 	m_registers(),
 	m_state(),
 	m_mmu(nullptr),
@@ -57,14 +60,25 @@ void CPU::init()
 
 void CPU::tick()
 {
-	mlibc_dbg(
-		"CPU::tick(). PC: 0x%04zx, SP: 0x%04zx, OP: 0x%02zx, STATE: %d, CLOCK: %d",
-		m_registers.PC,
-		m_registers.SP,
-		m_mmu->read(m_registers.PC),
-		m_state.STATE,
-		m_state.CLOCK
-	);
+	// Handle breakpoints
+	if (m_breakpoints.size() > 0)
+	{
+		// Did we hit a breakpoint? If so, print info
+		if (std::find(m_breakpoints.begin(), m_breakpoints.end(), m_registers.PC) != m_breakpoints.end())
+		{
+			mlibc_dbg("CPU::tick(). Breakpoint hit. PC: 0x%04zx, SP: 0x%04zx, OP: 0x%02zx, STATE: %d, CLOCK: %d",
+				m_registers.PC,
+				m_registers.SP,
+				m_mmu->read(m_registers.PC),
+				m_state.STATE,
+				m_state.CLOCK
+			);
+			mlibc_dbg("A: 0x%02zx, F: 0x%02zx, B: 0x%02zx, C: 0x%02zx, D: 0x%02zx, E: 0x%02zx, H: 0x%02zx, L: 0x%02zx",
+				m_registers.A, m_registers.F, m_registers.B, m_registers.C, m_registers.D, m_registers.E, m_registers.H, m_registers.L
+			);
+			mlibc_dbg("Z: %d, N: %d, H: %d, C: %d", m_registers.checkZ(), m_registers.checkN(), m_registers.checkH(), m_registers.checkC());
+		}
+	}
 
 	// Execute normal or cb opcode or do nothing while halted/stopped
 	switch (m_state.STATE)
@@ -537,10 +551,14 @@ void CPU::LD_HL_SP_r8(int8_t n)
 	// TODO: Verify this works!
 	if ((m_registers.SP & 0x0FFF) == 0x0FFF)
 		m_registers.setH();
+	else
+		m_registers.clearH();
 
 	// TODO: Verify this works!
 	if ((m_registers.SP & 0xFFFF) == 0xFFFF)
 		m_registers.setC();
+	else
+		m_registers.clearC();
 
 	m_registers.HL = result;
 	
@@ -569,13 +587,9 @@ byte CPU::RST(byte op)
 void CPU::BIT(int n, byte & reg)
 {
 	if (((reg >> n) && 0x01) == 0)
-	{
 		m_registers.setZ();
-	}
 	else
-	{
 		m_registers.clearZ();
-	}
 
 	m_registers.clearN();
 	m_registers.clearH();
