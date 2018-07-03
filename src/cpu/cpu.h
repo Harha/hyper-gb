@@ -33,7 +33,6 @@ public:
 	void LD_ADDR(word addr, byte n, int c = 0);
 	void LD_HL_SP_r8(int8_t n);
 	byte RST(byte op);
-	void BIT(int n, byte & reg);
 
 	CPURegisters & getRegisters();
 	CPUState & getState();

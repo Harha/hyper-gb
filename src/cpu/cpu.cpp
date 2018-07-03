@@ -140,8 +140,10 @@ void CPU::op(byte op)
 		case 0x2F: m_alu->CPL(); break;
 
 		// ALU 8-bit RLCA, RLA, RRCA, RRA
-		// TODO: FIX THIS AND IMPLEMENT
+		case 0x07: m_alu->RLC(m_registers.A); break;
 		case 0x17: m_alu->RL(m_registers.A); break;
+		case 0x0F: m_alu->RRC(m_registers.A); break;
+		case 0x1F: m_alu->RR(m_registers.A); break;
 
 		// ALU 16-bit
 		case 0x03: m_alu->INC(m_registers.BC); break;
@@ -506,10 +508,279 @@ void CPU::cb(byte op)
 	// Handle the OPCODE 
 	switch (op)
 	{
-		// BIT
+		// RLC, RRC
+		case 0x00: m_alu->RLC(m_registers.B); break;
+		case 0x01: m_alu->RLC(m_registers.C); break;
+		case 0x02: m_alu->RLC(m_registers.D); break;
+		case 0x03: m_alu->RLC(m_registers.E); break;
+		case 0x04: m_alu->RLC(m_registers.H); break;
+		case 0x05: m_alu->RLC(m_registers.L); break;
+		case 0x06: m_alu->RLC_ADDR(m_registers.HL); break;
+		case 0x07: m_alu->RLC(m_registers.A); break;
+		case 0x08: m_alu->RRC(m_registers.B); break;
+		case 0x09: m_alu->RRC(m_registers.C); break;
+		case 0x0A: m_alu->RRC(m_registers.D); break;
+		case 0x0B: m_alu->RRC(m_registers.E); break;
+		case 0x0C: m_alu->RRC(m_registers.H); break;
+		case 0x0D: m_alu->RRC(m_registers.L); break;
+		case 0x0E: m_alu->RRC_ADDR(m_registers.HL); break;
+		case 0x0F: m_alu->RRC(m_registers.A); break;
+		// RL, RR
+		case 0x10: m_alu->RL(m_registers.B); break;
 		case 0x11: m_alu->RL(m_registers.C); break;
-		case 0x40: BIT(0, m_registers.B); break;
-		case 0x7C: BIT(7, m_registers.H); break;
+		case 0x12: m_alu->RL(m_registers.D); break;
+		case 0x13: m_alu->RL(m_registers.E); break;
+		case 0x14: m_alu->RL(m_registers.H); break;
+		case 0x15: m_alu->RL(m_registers.L); break;
+		case 0x16: m_alu->RL_ADDR(m_registers.HL); break;
+		case 0x17: m_alu->RL(m_registers.A); break;
+		case 0x18: m_alu->RR(m_registers.B); break;
+		case 0x19: m_alu->RR(m_registers.C); break;
+		case 0x1A: m_alu->RR(m_registers.D); break;
+		case 0x1B: m_alu->RR(m_registers.E); break;
+		case 0x1C: m_alu->RR(m_registers.H); break;
+		case 0x1D: m_alu->RR(m_registers.L); break;
+		case 0x1E: m_alu->RR_ADDR(m_registers.HL); break;
+		case 0x1F: m_alu->RR(m_registers.A); break;
+		// SLA, SRA
+		case 0x20: m_alu->SLA(m_registers.B); break;
+		case 0x21: m_alu->SLA(m_registers.C); break;
+		case 0x22: m_alu->SLA(m_registers.D); break;
+		case 0x23: m_alu->SLA(m_registers.E); break;
+		case 0x24: m_alu->SLA(m_registers.H); break;
+		case 0x25: m_alu->SLA(m_registers.L); break;
+		case 0x26: m_alu->SLA_ADDR(m_registers.HL); break;
+		case 0x27: m_alu->SLA(m_registers.A); break;
+		case 0x28: m_alu->SRA(m_registers.B); break;
+		case 0x29: m_alu->SRA(m_registers.C); break;
+		case 0x2A: m_alu->SRA(m_registers.D); break;
+		case 0x2B: m_alu->SRA(m_registers.E); break;
+		case 0x2C: m_alu->SRA(m_registers.H); break;
+		case 0x2D: m_alu->SRA(m_registers.L); break;
+		case 0x2E: m_alu->SRA_ADDR(m_registers.HL); break;
+		case 0x2F: m_alu->SRA(m_registers.A); break;
+		// SWAP, SRL
+		case 0x30: m_alu->SWAP(m_registers.B); break;
+		case 0x31: m_alu->SWAP(m_registers.C); break;
+		case 0x32: m_alu->SWAP(m_registers.D); break;
+		case 0x33: m_alu->SWAP(m_registers.E); break;
+		case 0x34: m_alu->SWAP(m_registers.H); break;
+		case 0x35: m_alu->SWAP(m_registers.L); break;
+		case 0x36: m_alu->SWAP_ADDR(m_registers.HL); break;
+		case 0x37: m_alu->SWAP(m_registers.A); break;
+		case 0x38: m_alu->SRL(m_registers.B); break;
+		case 0x39: m_alu->SRL(m_registers.C); break;
+		case 0x3A: m_alu->SRL(m_registers.D); break;
+		case 0x3B: m_alu->SRL(m_registers.E); break;
+		case 0x3C: m_alu->SRL(m_registers.H); break;
+		case 0x3D: m_alu->SRL(m_registers.L); break;
+		case 0x3E: m_alu->SRL_ADDR(m_registers.HL); break;
+		case 0x3F: m_alu->SRL(m_registers.A); break;
+		// BIT 0, 1
+		case 0x40: m_alu->BIT(0, m_registers.B); break;
+		case 0x41: m_alu->BIT(0, m_registers.C); break;
+		case 0x42: m_alu->BIT(0, m_registers.D); break;
+		case 0x43: m_alu->BIT(0, m_registers.E); break;
+		case 0x44: m_alu->BIT(0, m_registers.H); break;
+		case 0x45: m_alu->BIT(0, m_registers.L); break;
+		case 0x46: m_alu->BIT_ADDR(0, m_registers.HL); break;
+		case 0x47: m_alu->BIT(0, m_registers.A); break;
+		case 0x48: m_alu->BIT(1, m_registers.B); break;
+		case 0x49: m_alu->BIT(1, m_registers.C); break;
+		case 0x4A: m_alu->BIT(1, m_registers.D); break;
+		case 0x4B: m_alu->BIT(1, m_registers.E); break;
+		case 0x4C: m_alu->BIT(1, m_registers.H); break;
+		case 0x4D: m_alu->BIT(1, m_registers.L); break;
+		case 0x4E: m_alu->BIT_ADDR(1, m_registers.HL); break;
+		case 0x4F: m_alu->BIT(1, m_registers.A); break;
+		// BIT 2, 3
+		case 0x50: m_alu->BIT(2, m_registers.B); break;
+		case 0x51: m_alu->BIT(2, m_registers.C); break;
+		case 0x52: m_alu->BIT(2, m_registers.D); break;
+		case 0x53: m_alu->BIT(2, m_registers.E); break;
+		case 0x54: m_alu->BIT(2, m_registers.H); break;
+		case 0x55: m_alu->BIT(2, m_registers.L); break;
+		case 0x56: m_alu->BIT_ADDR(2, m_registers.HL); break;
+		case 0x57: m_alu->BIT(2, m_registers.A); break;
+		case 0x58: m_alu->BIT(3, m_registers.B); break;
+		case 0x59: m_alu->BIT(3, m_registers.C); break;
+		case 0x5A: m_alu->BIT(3, m_registers.D); break;
+		case 0x5B: m_alu->BIT(3, m_registers.E); break;
+		case 0x5C: m_alu->BIT(3, m_registers.H); break;
+		case 0x5D: m_alu->BIT(3, m_registers.L); break;
+		case 0x5E: m_alu->BIT_ADDR(3, m_registers.HL); break;
+		case 0x5F: m_alu->BIT(3, m_registers.A); break;
+		// BIT 4, 5
+		case 0x60: m_alu->BIT(4, m_registers.B); break;
+		case 0x61: m_alu->BIT(4, m_registers.C); break;
+		case 0x62: m_alu->BIT(4, m_registers.D); break;
+		case 0x63: m_alu->BIT(4, m_registers.E); break;
+		case 0x64: m_alu->BIT(4, m_registers.H); break;
+		case 0x65: m_alu->BIT(4, m_registers.L); break;
+		case 0x66: m_alu->BIT_ADDR(4, m_registers.HL); break;
+		case 0x67: m_alu->BIT(4, m_registers.A); break;
+		case 0x68: m_alu->BIT(5, m_registers.B); break;
+		case 0x69: m_alu->BIT(5, m_registers.C); break;
+		case 0x6A: m_alu->BIT(5, m_registers.D); break;
+		case 0x6B: m_alu->BIT(5, m_registers.E); break;
+		case 0x6C: m_alu->BIT(5, m_registers.H); break;
+		case 0x6D: m_alu->BIT(5, m_registers.L); break;
+		case 0x6E: m_alu->BIT_ADDR(5, m_registers.HL); break;
+		case 0x6F: m_alu->BIT(5, m_registers.A); break;
+		// BIT 6, 7
+		case 0x70: m_alu->BIT(6, m_registers.B); break;
+		case 0x71: m_alu->BIT(6, m_registers.C); break;
+		case 0x72: m_alu->BIT(6, m_registers.D); break;
+		case 0x73: m_alu->BIT(6, m_registers.E); break;
+		case 0x74: m_alu->BIT(6, m_registers.H); break;
+		case 0x75: m_alu->BIT(6, m_registers.L); break;
+		case 0x76: m_alu->BIT_ADDR(6, m_registers.HL); break;
+		case 0x77: m_alu->BIT(6, m_registers.A); break;
+		case 0x78: m_alu->BIT(7, m_registers.B); break;
+		case 0x79: m_alu->BIT(7, m_registers.C); break;
+		case 0x7A: m_alu->BIT(7, m_registers.D); break;
+		case 0x7B: m_alu->BIT(7, m_registers.E); break;
+		case 0x7C: m_alu->BIT(7, m_registers.H); break;
+		case 0x7D: m_alu->BIT(7, m_registers.L); break;
+		case 0x7E: m_alu->BIT_ADDR(7, m_registers.HL); break;
+		case 0x7F: m_alu->BIT(7, m_registers.A); break;
+		// RES 0, 1
+		case 0x80: m_alu->RES(0, m_registers.B); break;
+		case 0x81: m_alu->RES(0, m_registers.C); break;
+		case 0x82: m_alu->RES(0, m_registers.D); break;
+		case 0x83: m_alu->RES(0, m_registers.E); break;
+		case 0x84: m_alu->RES(0, m_registers.H); break;
+		case 0x85: m_alu->RES(0, m_registers.L); break;
+		case 0x86: m_alu->RES_ADDR(0, m_registers.HL); break;
+		case 0x87: m_alu->RES(0, m_registers.A); break;
+		case 0x88: m_alu->RES(1, m_registers.B); break;
+		case 0x89: m_alu->RES(1, m_registers.C); break;
+		case 0x8A: m_alu->RES(1, m_registers.D); break;
+		case 0x8B: m_alu->RES(1, m_registers.E); break;
+		case 0x8C: m_alu->RES(1, m_registers.H); break;
+		case 0x8D: m_alu->RES(1, m_registers.L); break;
+		case 0x8E: m_alu->RES_ADDR(1, m_registers.HL); break;
+		case 0x8F: m_alu->RES(1, m_registers.A); break;
+		// RES 2, 3
+		case 0x90: m_alu->RES(2, m_registers.B); break;
+		case 0x91: m_alu->RES(2, m_registers.C); break;
+		case 0x92: m_alu->RES(2, m_registers.D); break;
+		case 0x93: m_alu->RES(2, m_registers.E); break;
+		case 0x94: m_alu->RES(2, m_registers.H); break;
+		case 0x95: m_alu->RES(2, m_registers.L); break;
+		case 0x96: m_alu->RES_ADDR(2, m_registers.HL); break;
+		case 0x97: m_alu->RES(2, m_registers.A); break;
+		case 0x98: m_alu->RES(3, m_registers.B); break;
+		case 0x99: m_alu->RES(3, m_registers.C); break;
+		case 0x9A: m_alu->RES(3, m_registers.D); break;
+		case 0x9B: m_alu->RES(3, m_registers.E); break;
+		case 0x9C: m_alu->RES(3, m_registers.H); break;
+		case 0x9D: m_alu->RES(3, m_registers.L); break;
+		case 0x9E: m_alu->RES_ADDR(3, m_registers.HL); break;
+		case 0x9F: m_alu->RES(3, m_registers.A); break;
+		// RES 4, 5
+		case 0xA0: m_alu->RES(4, m_registers.B); break;
+		case 0xA1: m_alu->RES(4, m_registers.C); break;
+		case 0xA2: m_alu->RES(4, m_registers.D); break;
+		case 0xA3: m_alu->RES(4, m_registers.E); break;
+		case 0xA4: m_alu->RES(4, m_registers.H); break;
+		case 0xA5: m_alu->RES(4, m_registers.L); break;
+		case 0xA6: m_alu->RES_ADDR(4, m_registers.HL); break;
+		case 0xA7: m_alu->RES(4, m_registers.A); break;
+		case 0xA8: m_alu->RES(5, m_registers.B); break;
+		case 0xA9: m_alu->RES(5, m_registers.C); break;
+		case 0xAA: m_alu->RES(5, m_registers.D); break;
+		case 0xAB: m_alu->RES(5, m_registers.E); break;
+		case 0xAC: m_alu->RES(5, m_registers.H); break;
+		case 0xAD: m_alu->RES(5, m_registers.L); break;
+		case 0xAE: m_alu->RES_ADDR(5, m_registers.HL); break;
+		case 0xAF: m_alu->RES(5, m_registers.A); break;
+		// RES 6, 7
+		case 0xB0: m_alu->RES(6, m_registers.B); break;
+		case 0xB1: m_alu->RES(6, m_registers.C); break;
+		case 0xB2: m_alu->RES(6, m_registers.D); break;
+		case 0xB3: m_alu->RES(6, m_registers.E); break;
+		case 0xB4: m_alu->RES(6, m_registers.H); break;
+		case 0xB5: m_alu->RES(6, m_registers.L); break;
+		case 0xB6: m_alu->RES_ADDR(6, m_registers.HL); break;
+		case 0xB7: m_alu->RES(6, m_registers.A); break;
+		case 0xB8: m_alu->RES(7, m_registers.B); break;
+		case 0xB9: m_alu->RES(7, m_registers.C); break;
+		case 0xBA: m_alu->RES(7, m_registers.D); break;
+		case 0xBB: m_alu->RES(7, m_registers.E); break;
+		case 0xBC: m_alu->RES(7, m_registers.H); break;
+		case 0xBD: m_alu->RES(7, m_registers.L); break;
+		case 0xBE: m_alu->RES_ADDR(7, m_registers.HL); break;
+		case 0xBF: m_alu->RES(7, m_registers.A); break;
+		// SET 0, 1
+		case 0xC0: m_alu->SET(0, m_registers.B); break;
+		case 0xC1: m_alu->SET(0, m_registers.C); break;
+		case 0xC2: m_alu->SET(0, m_registers.D); break;
+		case 0xC3: m_alu->SET(0, m_registers.E); break;
+		case 0xC4: m_alu->SET(0, m_registers.H); break;
+		case 0xC5: m_alu->SET(0, m_registers.L); break;
+		case 0xC6: m_alu->SET_ADDR(0, m_registers.HL); break;
+		case 0xC7: m_alu->SET(0, m_registers.A); break;
+		case 0xC8: m_alu->SET(1, m_registers.B); break;
+		case 0xC9: m_alu->SET(1, m_registers.C); break;
+		case 0xCA: m_alu->SET(1, m_registers.D); break;
+		case 0xCB: m_alu->SET(1, m_registers.E); break;
+		case 0xCC: m_alu->SET(1, m_registers.H); break;
+		case 0xCD: m_alu->SET(1, m_registers.L); break;
+		case 0xCE: m_alu->SET_ADDR(1, m_registers.HL); break;
+		case 0xCF: m_alu->SET(1, m_registers.A); break;
+		// SET 2, 3
+		case 0xD0: m_alu->SET(2, m_registers.B); break;
+		case 0xD1: m_alu->SET(2, m_registers.C); break;
+		case 0xD2: m_alu->SET(2, m_registers.D); break;
+		case 0xD3: m_alu->SET(2, m_registers.E); break;
+		case 0xD4: m_alu->SET(2, m_registers.H); break;
+		case 0xD5: m_alu->SET(2, m_registers.L); break;
+		case 0xD6: m_alu->SET_ADDR(2, m_registers.HL); break;
+		case 0xD7: m_alu->SET(2, m_registers.A); break;
+		case 0xD8: m_alu->SET(3, m_registers.B); break;
+		case 0xD9: m_alu->SET(3, m_registers.C); break;
+		case 0xDA: m_alu->SET(3, m_registers.D); break;
+		case 0xDB: m_alu->SET(3, m_registers.E); break;
+		case 0xDC: m_alu->SET(3, m_registers.H); break;
+		case 0xDD: m_alu->SET(3, m_registers.L); break;
+		case 0xDE: m_alu->SET_ADDR(3, m_registers.HL); break;
+		case 0xDF: m_alu->SET(3, m_registers.A); break;
+		// SET 4, 5
+		case 0xE0: m_alu->SET(4, m_registers.B); break;
+		case 0xE1: m_alu->SET(4, m_registers.C); break;
+		case 0xE2: m_alu->SET(4, m_registers.D); break;
+		case 0xE3: m_alu->SET(4, m_registers.E); break;
+		case 0xE4: m_alu->SET(4, m_registers.H); break;
+		case 0xE5: m_alu->SET(4, m_registers.L); break;
+		case 0xE6: m_alu->SET_ADDR(4, m_registers.HL); break;
+		case 0xE7: m_alu->SET(4, m_registers.A); break;
+		case 0xE8: m_alu->SET(5, m_registers.B); break;
+		case 0xE9: m_alu->SET(5, m_registers.C); break;
+		case 0xEA: m_alu->SET(5, m_registers.D); break;
+		case 0xEB: m_alu->SET(5, m_registers.E); break;
+		case 0xEC: m_alu->SET(5, m_registers.H); break;
+		case 0xED: m_alu->SET(5, m_registers.L); break;
+		case 0xEE: m_alu->SET_ADDR(5, m_registers.HL); break;
+		case 0xEF: m_alu->SET(5, m_registers.A); break;
+		// SET 6, 7
+		case 0xF0: m_alu->SET(6, m_registers.B); break;
+		case 0xF1: m_alu->SET(6, m_registers.C); break;
+		case 0xF2: m_alu->SET(6, m_registers.D); break;
+		case 0xF3: m_alu->SET(6, m_registers.E); break;
+		case 0xF4: m_alu->SET(6, m_registers.H); break;
+		case 0xF5: m_alu->SET(6, m_registers.L); break;
+		case 0xF6: m_alu->SET_ADDR(6, m_registers.HL); break;
+		case 0xF7: m_alu->SET(6, m_registers.A); break;
+		case 0xF8: m_alu->SET(7, m_registers.B); break;
+		case 0xF9: m_alu->SET(7, m_registers.C); break;
+		case 0xFA: m_alu->SET(7, m_registers.D); break;
+		case 0xFB: m_alu->SET(7, m_registers.E); break;
+		case 0xFC: m_alu->SET(7, m_registers.H); break;
+		case 0xFD: m_alu->SET(7, m_registers.L); break;
+		case 0xFE: m_alu->SET_ADDR(7, m_registers.HL); break;
+		case 0xFF: m_alu->SET(7, m_registers.A); break;
+
 		default:
 			mlibc_err("CPU::CB(), error! Unknown OPCODE 0x%02zx!", op);
 	}
@@ -546,18 +817,8 @@ void CPU::LD_HL_SP_r8(int8_t n)
 
 	m_registers.clearZ();
 	m_registers.clearN();
-	
-	// TODO: Verify this works!
-	if ((m_registers.SP & 0x0FFF) == 0x0FFF)
-		m_registers.setH();
-	else
-		m_registers.clearH();
-
-	// TODO: Verify this works!
-	if ((m_registers.SP & 0xFFFF) == 0xFFFF)
-		m_registers.setC();
-	else
-		m_registers.clearC();
+	m_registers.testH((m_registers.SP & 0x0FFF) == 0x0FFF);
+	m_registers.testC((m_registers.SP & 0xFFFF) == 0xFFFF);
 
 	m_registers.HL = result;
 	
@@ -581,18 +842,6 @@ byte CPU::RST(byte op)
 	mlibc_err("CPU::RST(0x%02zx), error! Attempted to map a non-RST opcode to a pointer!", op);
 
 	return 0x0000;
-}
-
-void CPU::BIT(int n, byte & reg)
-{
-	if (((reg >> n) && 0x01) == 0)
-		m_registers.setZ();
-	else
-		m_registers.clearZ();
-
-	m_registers.clearN();
-	m_registers.clearH();
-	m_state.CLOCK += 4;
 }
 
 CPURegisters & CPU::getRegisters()

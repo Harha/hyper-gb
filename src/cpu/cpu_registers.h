@@ -165,17 +165,17 @@ struct CPURegisters
 
 	inline bool checkN()
 	{
-		return (F & CPUR_F_N) > 0x00;
+		return (F & CPUR_F_N) != 0x00;
 	}
 
 	inline bool checkH()
 	{
-		return (F & CPUR_F_H) > 0x00;
+		return (F & CPUR_F_H) != 0x00;
 	}
 
 	inline bool checkC()
 	{
-		return (F & CPUR_F_C) > 0x00;
+		return (F & CPUR_F_C) != 0x00;
 	}
 
 	// Check flag condition based on OPCODE
