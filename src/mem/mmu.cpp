@@ -1,5 +1,6 @@
 #include "mmu.h"
 #include <stdexcept>
+#include <cstdio>
 #include "3rdparty/mlibc_log.h"
 #include "bootrom.h"
 #include "memory_area.h"
@@ -23,20 +24,22 @@ MMU::MMU() :
 
 	mlibc_dbg("MMU::MMU(...) Boot ROM, initialized bootstrap program!");
 
-	// Init ROM bank #0
+	// Init ROM bank(s)
 	m_rom.push_back(new ROM(0x0000, 0x4000));
+	m_rom.push_back(new ROM(0x4000, 0x4000));
 
 	// Init VRAM
 	m_vram = new RAM(0x8000, 0x2000);
 
-	// Init RAM bank #0
+	// Init RAM bank(s)
 	m_ram.push_back(new RAM(0xC000, 0x2000));
+	m_ram.push_back(new RAM(0xA000, 0x2000));
 
 	// Init I/O
-	m_io = new RAM(0xFF00, 0x004C); // todo: create proper i/o class for this area
+	m_io = new RAM(0xFF00, 0x004C);
 
 	// Init HRAM
-	m_hram = new RAM(0xFF80, 0x007E);
+	m_hram = new RAM(0xFF80, 0x007F);
 
 	mlibc_dbg("MMU::MMU(...)");
 }
@@ -70,6 +73,53 @@ MMU::~MMU()
 	mlibc_dbg("MMU::~MMU(...)");
 }
 
+void MMU::loadROM(const std::string & fp)
+{
+	// Load file as binary + get file size
+	FILE * file_ptr = fopen(fp.c_str(), "rb");
+	fseek(file_ptr, 0, SEEK_END);
+	long file_len = ftell(file_ptr);
+	rewind(file_ptr);
+
+	// Read the file into temp buffer and close it after
+	byte * file_buf = new byte[file_len];
+	fread(file_buf, file_len, 1, file_ptr);
+	fclose(file_ptr);
+
+	// Write the file contents into ROM
+	for (long i = 0; i < file_len; i++)
+	{
+		// Get current address in 16-bit unsigned int
+		word addr = static_cast<word>(i);
+
+		// Choose the ROM bank to write to
+		MemoryArea * rom = nullptr;
+		if (addr >= MMU_ROM_BANK_0 && addr < MMU_ROM_BANK_X)
+		{
+			rom = m_rom[0];
+		}
+		else if (addr >= MMU_ROM_BANK_X && addr < MMU_VRAM)
+		{
+			rom = m_rom[1];
+		}
+
+		// If out of bounds, skip
+		if (rom == nullptr)
+			break;
+
+		// Re-map the address
+		addr = rom->map(addr);
+
+		// Write the data
+		rom->getMemory()[addr] = file_buf[i];
+	}
+
+	// Free the temp buffer
+	delete file_buf;
+
+	mlibc_dbg("MMU::loadROM(%s). file_len: %d", fp.c_str(), file_len);
+}
+
 MemoryArea * MMU::map(word addr)
 {
 	// ROM bank #0 & boot ROM
@@ -85,15 +135,17 @@ MemoryArea * MMU::map(word addr)
 	// ROM bank #x
 	else if (addr >= MMU_ROM_BANK_X && addr < MMU_VRAM)
 	{
-		if (m_rom.size() <= 1)
-			throw std::runtime_error("MMU::getByte(...), error! Tried to access non-existent ROM bank #x!");
-
 		return m_rom[1];
 	}
 	// VRAM
 	else if (addr >= MMU_VRAM && addr < MMU_RAM_BANK_X)
 	{
 		return m_vram;
+	}
+	// RAM bank #x
+	else if (addr >= MMU_RAM_BANK_X && addr < MMU_RAM_BANK_0)
+	{
+		return m_ram[1];
 	}
 	// RAM bank #0
 	else if (addr >= MMU_RAM_BANK_0 && addr < MMU_RAM_BANK_E)
@@ -122,7 +174,7 @@ byte MMU::read(word addr)
 	// Check if mapped memory_area is non-existent
 	if (memory_area == nullptr)
 	{
-		mlibc_wrn("MMU::read(...), warning! Tried to read from 0x%04zx which maps to a nullptr!", addr);
+		//mlibc_wrn("MMU::read(...), warning! Tried to read from 0x%04zx which maps to a nullptr!", addr);
 		return 0x00;
 	}
 
@@ -137,7 +189,7 @@ void MMU::write(word addr, byte value)
 	// Check if mapped memory_area is non-existent
 	if (memory_area == nullptr)
 	{
-		mlibc_wrn("MMU::write(...), warning! Tried to write to 0x%04zx which maps to a nullptr!", addr);
+		//mlibc_wrn("MMU::write(...), warning! Tried to write to 0x%04zx which maps to a nullptr!", addr);
 		return;
 	}
 

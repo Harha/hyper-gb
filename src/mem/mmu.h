@@ -35,6 +35,8 @@ public:
 	MMU();
 	~MMU();
 
+	// Load a ROM file
+	void loadROM(const std::string & fp);
 	// Get a true pointer to target memory area located around specified 16-bit address
 	MemoryArea * map(word addr);
 	// Get a byte at specified 16-bit address
