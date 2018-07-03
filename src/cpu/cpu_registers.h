@@ -78,6 +78,26 @@ struct CPURegisters
 	// Program counter, access as 16-bit uint
 	word PC;
 
+	inline void testZ(bool b)
+	{
+		F = (b) ? (F | CPUR_F_Z) : (F & CPUR_F_ZN);
+	}
+
+	inline void testN(bool b)
+	{
+		F = (b) ? (F | CPUR_F_N) : (F & CPUR_F_NN);
+	}
+
+	inline void testH(bool b)
+	{
+		F = (b) ? (F | CPUR_F_H) : (F & CPUR_F_HN);
+	}
+
+	inline void testC(bool b)
+	{
+		F = (b) ? (F | CPUR_F_C) : (F & CPUR_F_CN);
+	}
+
 	inline void setZ()
 	{
 		F = F | CPUR_F_Z;
