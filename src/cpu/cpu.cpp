@@ -359,10 +359,10 @@ void CPU::op(byte op)
 		case 0xF2: LD(m_registers.A, m_mmu->read(0xFF00 + m_registers.C), 4); break;
 
 		// POP
-		case 0xC1: m_registers.BC = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 12; break;
-		case 0xD1: m_registers.DE = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 12; break;
-		case 0xE1: m_registers.HL = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 12; break;
-		case 0xF1: m_registers.AF = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 12; break;
+		case 0xC1: m_registers.BC = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 8; break;
+		case 0xD1: m_registers.DE = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 8; break;
+		case 0xE1: m_registers.HL = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 8; break;
+		case 0xF1: m_registers.AF = word_(m_mmu->read(SP++), m_mmu->read(SP++)); m_state.CLOCK += 8; break;
 		// PUSH
 		case 0xC5: m_mmu->write(--SP, msb(m_registers.BC)); m_mmu->write(--SP, lsb(m_registers.BC)); m_state.CLOCK += 12; break;
 		case 0xD5: m_mmu->write(--SP, msb(m_registers.DE)); m_mmu->write(--SP, lsb(m_registers.DE)); m_state.CLOCK += 12; break;
@@ -374,13 +374,12 @@ void CPU::op(byte op)
 		{
 			word nn = word_(m_mmu->read(PC++), m_mmu->read(PC++));
 			PC = nn;
-			CLOCK += 16;
+			CLOCK += 12;
 		} break;
 		// JP (HL)
 		case 0xE9:
 		{
 			PC = m_registers.HL;
-			CLOCK += 4;
 		} break;
 		// JP cc, nn
 		case 0xC2:
@@ -389,7 +388,7 @@ void CPU::op(byte op)
 		case 0xDA:
 		{
 			word nn = word_(m_mmu->read(PC++), m_mmu->read(PC++));
-			CLOCK += 12;
+			CLOCK += 8;
 			if (m_registers.checkFlag(op))
 			{
 				PC = nn;
@@ -401,7 +400,7 @@ void CPU::op(byte op)
 		{
 			int8_t r = static_cast<int8_t>(m_mmu->read(PC++));
 			PC = PC + r;
-			CLOCK += 12;
+			CLOCK += 8;
 		} break;
 		// JR cc, r
 		case 0x20:
@@ -410,7 +409,7 @@ void CPU::op(byte op)
 		case 0x38:
 		{
 			int8_t r = static_cast<int8_t>(m_mmu->read(PC++));
-			CLOCK += 8;
+			CLOCK += 4;
 			if (m_registers.checkFlag(op))
 			{
 				PC = PC + r;
@@ -424,7 +423,7 @@ void CPU::op(byte op)
 			m_mmu->write(--SP, msb(PC));
 			m_mmu->write(--SP, lsb(PC));
 			PC = nn;
-			CLOCK += 24;
+			CLOCK += 20;
 		} break;
 		// CALL cc, nn
 		case 0xC4:
@@ -433,7 +432,7 @@ void CPU::op(byte op)
 		case 0xDC:
 		{
 			word nn = word_(m_mmu->read(PC++), m_mmu->read(PC++));
-			CLOCK += 12;
+			CLOCK += 8;
 			if (m_registers.checkFlag(op))
 			{
 				m_mmu->write(--SP, msb(PC));
@@ -446,7 +445,7 @@ void CPU::op(byte op)
 		case 0xC9:
 		{
 			PC = word_(m_mmu->read(SP++), m_mmu->read(SP++));
-			CLOCK += 16;
+			CLOCK += 12;
 		} break;
 		// RET cc
 		case 0xC0:
@@ -454,7 +453,7 @@ void CPU::op(byte op)
 		case 0xC8:
 		case 0xD8:
 		{
-			CLOCK += 8;
+			CLOCK += 4;
 			if (m_registers.checkFlag(op))
 			{
 				PC = word_(m_mmu->read(SP++), m_mmu->read(SP++));
@@ -466,7 +465,7 @@ void CPU::op(byte op)
 		{
 			PC = word_(m_mmu->read(SP++), m_mmu->read(SP++));
 			IME = 1;
-			CLOCK += 16;
+			CLOCK += 12;
 		} break;
 		// RST n
 		case 0xC7:
@@ -482,7 +481,7 @@ void CPU::op(byte op)
 			m_mmu->write(--SP, msb(PC));
 			m_mmu->write(--SP, lsb(PC));
 			PC = word_(n, 0x00);
-			CLOCK += 16;
+			CLOCK += 12;
 		} break;
 
 		default:

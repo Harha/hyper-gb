@@ -22,7 +22,7 @@ int main(int argc, char * argv[])
 	mlibc_inf("::main(), mlibc_log_init successful.");
 
 	std::vector<word> breakpoints;
-	breakpoints.push_back(0x006a);
+	breakpoints.push_back(0x004f);
 	hgb::CPU * cpu = new hgb::CPU(breakpoints);
 
 	// Run the CPU for n instructions
