@@ -11,12 +11,14 @@ namespace hgb
 {
 
 MMU::MMU() :
+	m_cart(nullptr),
 	m_bootrom(nullptr),
 	m_rom(),
 	m_vram(nullptr),
 	m_ram(),
 	m_io(nullptr),
-	m_hram(nullptr)
+	m_hram(nullptr),
+	m_ffff()
 {
 	// Init boot ROM
 	m_bootrom = new ROM(0x0000, 0x0100);
@@ -25,21 +27,21 @@ MMU::MMU() :
 	mlibc_dbg("MMU::MMU(...) Boot ROM, initialized bootstrap program!");
 
 	// Init ROM bank(s)
-	m_rom.push_back(new ROM(0x0000, 0x4000));
-	m_rom.push_back(new ROM(0x4000, 0x4000));
+	m_rom.push_back(new ROM(MMU_ROM_BANK_0, MMU_ROM_BANK_SZ));
+	m_rom.push_back(new ROM(MMU_ROM_BANK_X, MMU_ROM_BANK_SZ));
 
 	// Init VRAM
-	m_vram = new RAM(0x8000, 0x2000);
+	m_vram = new RAM(MMU_VRAM, MMU_VRAM_SZ);
 
 	// Init RAM bank(s)
-	m_ram.push_back(new RAM(0xC000, 0x2000));
-	m_ram.push_back(new RAM(0xA000, 0x2000));
+	m_ram.push_back(new RAM(MMU_RAM_BANK_0, MMU_RAM_BANK_SZ));
+	m_ram.push_back(new RAM(MMU_RAM_BANK_X, MMU_RAM_BANK_SZ));
 
 	// Init I/O
-	m_io = new RAM(0xFF00, 0x004C);
+	m_io = new RAM(MMU_IO, MMU_IO_SZ);
 
 	// Init HRAM
-	m_hram = new RAM(0xFF80, 0x007F);
+	m_hram = new RAM(MMU_HRAM, MMU_HRAM_SZ);
 
 	mlibc_dbg("MMU::MMU(...)");
 }
@@ -75,19 +77,52 @@ MMU::~MMU()
 
 void MMU::loadROM(const std::string & fp)
 {
+	// Init new cartridge instance
+	m_cart = new Cartridge;
+
 	// Load file as binary + get file size
 	FILE * file_ptr = fopen(fp.c_str(), "rb");
 	fseek(file_ptr, 0, SEEK_END);
-	long file_len = ftell(file_ptr);
+	m_cart->data_len = ftell(file_ptr);
 	rewind(file_ptr);
 
-	// Read the file into temp buffer and close it after
-	byte * file_buf = new byte[file_len];
-	fread(file_buf, file_len, 1, file_ptr);
+	// Read the file into cartridge data and close it after
+	m_cart->data = new byte[m_cart->data_len];
+	fread(m_cart->data, m_cart->data_len, 1, file_ptr);
 	fclose(file_ptr);
 
+	// Read cartridge metadata
+	m_cart->game_title = std::string(&m_cart->data[CRT_GAME_TITLE_S], &m_cart->data[CRT_GAME_TITLE_S] + CRT_GAME_TITLE_SZ);
+	m_cart->manuf_code = std::string(&m_cart->data[CRT_MANUF_CODE_S], &m_cart->data[CRT_MANUF_CODE_S] + CRT_MANUF_CODE_SZ);
+	m_cart->gbc_flag = m_cart->data[CRT_GBC_FLAG];
+	m_cart->license_code_new = std::string(&m_cart->data[CRT_LICENSE_CODE_NEW_S], &m_cart->data[CRT_LICENSE_CODE_NEW_S] + CRT_LICENSE_CODE_NEW_SZ);
+	m_cart->sgb_flag = m_cart->data[CRT_SGB_FLAG];
+	m_cart->type = m_cart->data[CRT_TYPE];
+	m_cart->rom_size = m_cart->data[CRT_ROM_SIZE];
+	m_cart->ram_size = m_cart->data[CRT_RAM_SIZE];
+	m_cart->destination_code = m_cart->data[CRT_DEST_CODE];
+	m_cart->license_code_old = m_cart->data[CRT_LICENSE_CODE_OLD];
+	m_cart->rom_version = m_cart->data[CRT_ROM_VERSION];
+	m_cart->header_checksum = m_cart->data[CRT_HEADER_CHECKSUM];
+	m_cart->global_checksum = word_(m_cart->data[CRT_GLOBAL_CHECKSUM_E], m_cart->data[CRT_GLOBAL_CHECKSUM_S]);
+
+	// Print cartridge metadata
+	mlibc_inf("game_title: %s", m_cart->game_title.c_str());
+	mlibc_inf("manuf_code: %s", m_cart->manuf_code.c_str());
+	mlibc_inf("gbc_flag: 0x%02zx", m_cart->gbc_flag);
+	mlibc_inf("license_code_new: %s", m_cart->license_code_new);
+	mlibc_inf("sgb_flag: 0x%02zx", m_cart->sgb_flag);
+	mlibc_inf("type: 0x%02zx", m_cart->type);
+	mlibc_inf("rom_size: 0x%02zx", m_cart->rom_size);
+	mlibc_inf("ram_size: 0x%02zx", m_cart->ram_size);
+	mlibc_inf("desination_code: 0x%02zx", m_cart->destination_code);
+	mlibc_inf("license_code_old: 0x%02zx", m_cart->license_code_old);
+	mlibc_inf("rom_version: 0x%02zx", m_cart->rom_version);
+	mlibc_inf("header_checksum: 0x%02zx", m_cart->header_checksum);
+	mlibc_inf("global_checksum: 0x%04zx", m_cart->global_checksum);
+
 	// Write the file contents into ROM
-	for (long i = 0; i < file_len; i++)
+	for (long i = 0; i < m_cart->data_len; i++)
 	{
 		// Get current address in 16-bit unsigned int
 		word addr = static_cast<word>(i);
@@ -105,19 +140,19 @@ void MMU::loadROM(const std::string & fp)
 
 		// If out of bounds, skip
 		if (rom == nullptr)
+		{
+			mlibc_err("MMU::loadROM(%s). file_len exceeds 0x8000, cannot load ROM properly!", fp.c_str());
 			break;
+		}
 
 		// Re-map the address
 		addr = rom->map(addr);
 
 		// Write the data
-		rom->getMemory()[addr] = file_buf[i];
+		rom->getMemory()[addr] = m_cart->data[i];
 	}
 
-	// Free the temp buffer
-	delete file_buf;
-
-	mlibc_dbg("MMU::loadROM(%s). file_len: %d", fp.c_str(), file_len);
+	mlibc_dbg("MMU::loadROM(%s). data_len: %d", fp.c_str(), m_cart->data_len);
 }
 
 MemoryArea * MMU::map(word addr)
@@ -153,7 +188,7 @@ MemoryArea * MMU::map(word addr)
 		return m_ram[0];
 	}
 	// I/O
-	else if (addr >= MMU_IO && addr < MMU_EMPTY_1)
+	else if (addr >= MMU_IO && addr < MMU_HRAM_S)
 	{
 		return m_io;
 	}
@@ -171,10 +206,13 @@ byte MMU::read(word addr)
 	// Get memory area mapped to this address
 	MemoryArea * memory_area = map(addr);
 
-	// Check if mapped memory_area is non-existent
+	// Check if mapped memory area is non-existent
 	if (memory_area == nullptr)
 	{
-		//mlibc_wrn("MMU::read(...), warning! Tried to read from 0x%04zx which maps to a nullptr!", addr);
+		// IE flags register
+		if (addr == MMU_REG_IE)
+			return m_ffff;
+
 		return 0x00;
 	}
 
@@ -186,10 +224,13 @@ void MMU::write(word addr, byte value)
 	// Get memory area mapped to this address
 	MemoryArea * memory_area = map(addr);
 
-	// Check if mapped memory_area is non-existent
+	// Check if mapped memory area is non-existent
 	if (memory_area == nullptr)
 	{
-		//mlibc_wrn("MMU::write(...), warning! Tried to write to 0x%04zx which maps to a nullptr!", addr);
+		// IE flags register
+		if (addr == MMU_REG_IE)
+			m_ffff = value;
+
 		return;
 	}
 
@@ -201,6 +242,11 @@ void MMU::write(word addr, byte value)
 	}
 
 	memory_area->write(addr, value);
+}
+
+Cartridge * MMU::getCart()
+{
+	return m_cart;
 }
 
 MemoryArea * MMU::getBootROM()
@@ -231,6 +277,11 @@ MemoryArea * MMU::getIO()
 MemoryArea * MMU::getHRAM()
 {
 	return m_hram;
+}
+
+byte & MMU::getFFFF()
+{
+	return m_ffff;
 }
 
 }

@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
 	mlibc_inf("::main(), mlibc_log_init successful.");
 
 	// Init SDL2
-	return_code = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+	return_code = SDL_Init(SDL_INIT_VIDEO);
 	if (return_code != 0)
 	{
 		throw std::runtime_error("::main(), SDL_Init error: " + std::string(SDL_GetError()));
@@ -38,6 +38,8 @@ int main(int argc, char * argv[])
 	std::vector<word> breakpoints;
 	//breakpoints.push_back(0x0068);
 	hgb::CPU * cpu = new hgb::CPU(breakpoints);
+
+	//cpu->getMMU()->write(MMU_REG_BOOT, 0x01);
 
 	// Load ROM file
 	cpu->getMMU()->loadROM("Tetris-USA.gb");
