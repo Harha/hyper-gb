@@ -119,14 +119,14 @@ void ALU::INC(byte & val, int c)
 
 void ALU::INC_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	byte result = val + 1;
 
 	m_registers.testZ(result == 0x00);
 	m_registers.clearN();
 	m_registers.testH((val & 0x0F) == 0x0F);
 
-	m_mmu->write(addr, result);
+	m_mmu.write(addr, result);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -154,14 +154,14 @@ void ALU::DEC(byte & val, int c)
 
 void ALU::DEC_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	byte result = val - 1;
 
 	m_registers.testZ(result == 0x00);
 	m_registers.clearN();
 	m_registers.testH((val & 0x0F) == 0x00);
 
-	m_mmu->write(addr, result);
+	m_mmu.write(addr, result);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -267,9 +267,9 @@ void ALU::RLC(byte & val, int c)
 
 void ALU::RLC_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	RLC(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -291,9 +291,9 @@ void ALU::RRC(byte & val, int c)
 
 void ALU::RRC_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	RRC(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -317,9 +317,9 @@ void ALU::RL(byte & val, int c)
 
 void ALU::RL_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	RL(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -343,9 +343,9 @@ void ALU::RR(byte & val, int c)
 
 void ALU::RR_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	RR(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -367,9 +367,9 @@ void ALU::SLA(byte & val, int c)
 
 void ALU::SLA_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	SLA(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -393,9 +393,9 @@ void ALU::SRA(byte & val, int c)
 
 void ALU::SRA_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	SRA(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -417,9 +417,9 @@ void ALU::SWAP(byte & val, int c)
 
 void ALU::SWAP_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	SWAP(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -442,9 +442,9 @@ void ALU::SRL(byte & val, int c)
 
 void ALU::SRL_ADDR(word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	SRL(val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -461,7 +461,7 @@ void ALU::BIT(int n, byte & val, int c)
 
 void ALU::BIT_ADDR(int n, word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	BIT(n, val, c);
 
 	m_state.CLOCK += 8;
@@ -479,9 +479,9 @@ void ALU::RES(int n, byte & val, int c)
 
 void ALU::RES_ADDR(int n, word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	RES(n, val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;
@@ -498,9 +498,9 @@ void ALU::SET(int n, byte & val, int c)
 
 void ALU::SET_ADDR(int n, word addr, int c)
 {
-	byte val = m_mmu->read(addr);
+	byte val = m_mmu.read(addr);
 	SET(n, val, c);
-	m_mmu->write(addr, val);
+	m_mmu.write(addr, val);
 
 	m_state.CLOCK += 8;
 	m_state.CLOCK += c;

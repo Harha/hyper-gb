@@ -25,7 +25,7 @@ byte ROM::read(word addr)
 
 void ROM::write(word addr, byte value)
 {
-	throw std::runtime_error("ROM::setByte(...), error! Tried to modify read-only memory!");
+	mlibc_wrn("ROM::write(0x%04zx), error! Tried to modify read-only memory!", addr);
 }
 
 }

@@ -6,6 +6,10 @@
 #include "mem/memory_area.h"
 #include "mem/rom.h"
 #include "mem/ram.h"
+#include "cpu/irq.h"
+#include "io/joypad.h"
+#include "io/timer.h"
+#include "ppu/ppu.h"
 #include "mem/mmu.h"
 #include "cpu/cpu.h"
 
@@ -34,15 +38,22 @@ int main(int argc, char * argv[])
 	// Create memory debug window
 	auto window_memory = Window::create("MEMORY", 256, 256, 2, false);
 
-	// Create CPU
-	std::vector<word> breakpoints;
-	//breakpoints.push_back(0x0068);
-	hgb::CPU * cpu = new hgb::CPU(breakpoints);
+	// Create I/O devices
+	hgb::IRQ irq;
+	hgb::Joypad joy;
+	hgb::Timer timer;
+	hgb::PPU ppu;
 
-	//cpu->getMMU()->write(MMU_REG_BOOT, 0x01);
+	// Create MMU
+	hgb::MMU mmu(irq, joy, timer, ppu);
+
+	// Create CPU
+	hgb::CPU cpu(mmu);
+
+	cpu.getBreakpoints().push_back(0x0100);
 
 	// Load ROM file
-	cpu->getMMU()->loadROM("Tetris-USA.gb");
+	cpu.getMMU().loadROM("Tetris-USA.gb");
 
 	// Run the CPU, visualize memory
 	bool running = true;
@@ -50,14 +61,17 @@ int main(int argc, char * argv[])
 	while (running)
 	{
 		// CPU tick
-		cpu->tick();
+		cpu.tick();
+
+		// PPU tick
+		ppu.tick();
 
 		if (frame % 1000 == 0)
 		{
 			// Render memory
 			for (word i = 0; i < 0xFFFF; i++)
 			{
-				byte val = cpu->getMMU()->read(i);
+				byte val = cpu.getMMU().read(i);
 
 				byte r = 0x00, g = 0x00, b = 0x00;
 				r = (i >= 0x0000 && i < 0x8000) ? val : 0x00;
@@ -83,7 +97,6 @@ int main(int argc, char * argv[])
 		frame++;
 	}
 
-	delete cpu;
 	Window::free(window_memory);
 
 	return 0;

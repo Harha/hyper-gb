@@ -22,8 +22,8 @@ struct Window
 
 Window * create(
 	const std::string & title,
-	int width = 640,
-	int height = 467,
+	int width = 160,
+	int height = 144,
 	int scale = 1,
 	bool fullscreen = false
 );

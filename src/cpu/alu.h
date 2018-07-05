@@ -65,7 +65,7 @@ private:
 	CPU * m_cpu;
 	CPURegisters & m_registers;
 	CPUState & m_state;
-	MMU * m_mmu;
+	MMU & m_mmu;
 };
 
 }

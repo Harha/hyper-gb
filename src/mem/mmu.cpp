@@ -2,23 +2,35 @@
 #include <stdexcept>
 #include <cstdio>
 #include "3rdparty/mlibc_log.h"
-#include "bootrom.h"
-#include "memory_area.h"
-#include "rom.h"
-#include "ram.h"
+#include "mem/bootrom.h"
+#include "mem/memory_area.h"
+#include "mem/rom.h"
+#include "mem/ram.h"
+#include "cpu/irq.h"
+#include "io/joypad.h"
+#include "io/timer.h"
+#include "ppu/ppu.h"
 
 namespace hgb
 {
 
-MMU::MMU() :
+MMU::MMU(
+	MemoryArea & irq,
+	MemoryArea & joy,
+	MemoryArea & timer,
+	MemoryArea & ppu
+) :
 	m_cart(nullptr),
 	m_bootrom(nullptr),
 	m_rom(),
 	m_vram(nullptr),
 	m_ram(),
-	m_io(nullptr),
-	m_hram(nullptr),
-	m_ffff()
+	m_irq(irq),
+	m_joy(joy),
+	m_timer(timer),
+	m_ppu(ppu),
+	m_ff50(),
+	m_hram(nullptr)
 {
 	// Init boot ROM
 	m_bootrom = new ROM(0x0000, 0x0100);
@@ -37,8 +49,8 @@ MMU::MMU() :
 	m_ram.push_back(new RAM(MMU_RAM_BANK_0, MMU_RAM_BANK_SZ));
 	m_ram.push_back(new RAM(MMU_RAM_BANK_X, MMU_RAM_BANK_SZ));
 
-	// Init I/O
-	m_io = new RAM(MMU_IO, MMU_IO_SZ);
+	// Init other registers
+	m_ff50 = 0x00;
 
 	// Init HRAM
 	m_hram = new RAM(MMU_HRAM, MMU_HRAM_SZ);
@@ -50,9 +62,6 @@ MMU::~MMU()
 {
 	// Free HRAM from memory
 	delete m_hram;
-
-	// Free I/O from memory
-	delete m_io;
 
 	// Free RAM banks from memory
 	for (auto ma : m_ram)
@@ -72,6 +81,9 @@ MMU::~MMU()
 	// Free boot ROM from memory
 	delete m_bootrom;
 
+	// Free cartridge data
+	delete m_cart;
+
 	mlibc_dbg("MMU::~MMU(...)");
 }
 
@@ -82,6 +94,10 @@ void MMU::loadROM(const std::string & fp)
 
 	// Load file as binary + get file size
 	FILE * file_ptr = fopen(fp.c_str(), "rb");
+
+	if (file_ptr == NULL)
+		throw std::runtime_error("MMU::loadROM(...), error! fopen returned a NULL pointer!");
+
 	fseek(file_ptr, 0, SEEK_END);
 	m_cart->data_len = ftell(file_ptr);
 	rewind(file_ptr);
@@ -110,7 +126,7 @@ void MMU::loadROM(const std::string & fp)
 	mlibc_inf("game_title: %s", m_cart->game_title.c_str());
 	mlibc_inf("manuf_code: %s", m_cart->manuf_code.c_str());
 	mlibc_inf("gbc_flag: 0x%02zx", m_cart->gbc_flag);
-	mlibc_inf("license_code_new: %s", m_cart->license_code_new);
+	mlibc_inf("license_code_new: %s", m_cart->license_code_new.c_str());
 	mlibc_inf("sgb_flag: 0x%02zx", m_cart->sgb_flag);
 	mlibc_inf("type: 0x%02zx", m_cart->type);
 	mlibc_inf("rom_size: 0x%02zx", m_cart->rom_size);
@@ -161,7 +177,7 @@ MemoryArea * MMU::map(word addr)
 	if (addr >= MMU_ROM_BANK_0 && addr < MMU_ROM_BANK_X)
 	{
 		// Map to boot ROM if enabled
-		if (addr <= MMU_ROM_BOOT_E && m_io->read(MMU_REG_BOOT) != 0x01)
+		if (addr <= MMU_ROM_BOOT_E && m_ff50 != 0x01)
 			return m_bootrom;
 
 		// Otherwise map to normal ROM
@@ -187,10 +203,25 @@ MemoryArea * MMU::map(word addr)
 	{
 		return m_ram[0];
 	}
-	// I/O
-	else if (addr >= MMU_IO && addr < MMU_HRAM_S)
+	// IRQ ctrl
+	else if (addr == IRQ_REG_IF || addr == IRQ_REG_IE)
 	{
-		return m_io;
+		return &m_irq;
+	}
+	// Joypad ctrl
+	else if (addr == IO_REG_P1)
+	{
+		return &m_joy;
+	}
+	// Timer
+	else if (addr >= TIMER_REG_S && addr <= TIMER_REG_E)
+	{
+		return &m_timer;
+	}
+	// PPU
+	else if (addr >= PPU_REG_S && addr <= PPU_REG_E)
+	{
+		return &m_ppu;
 	}
 	// HRAM
 	else if (addr >= MMU_HRAM_S && addr <= MMU_HRAM_E)
@@ -209,9 +240,9 @@ byte MMU::read(word addr)
 	// Check if mapped memory area is non-existent
 	if (memory_area == nullptr)
 	{
-		// IE flags register
-		if (addr == MMU_REG_IE)
-			return m_ffff;
+		// enable / disable bootrom register
+		if (addr == MMU_REG_BOOT)
+			return m_ff50;
 
 		return 0x00;
 	}
@@ -227,17 +258,10 @@ void MMU::write(word addr, byte value)
 	// Check if mapped memory area is non-existent
 	if (memory_area == nullptr)
 	{
-		// IE flags register
-		if (addr == MMU_REG_IE)
-			m_ffff = value;
+		// enable / disable bootrom register (allow writing to only once!)
+		if (addr == MMU_REG_BOOT && m_ff50 == 0x00)
+			m_ff50 = value;
 
-		return;
-	}
-
-	// Disallow writing to $FF50 after boot sequence
-	if (addr == MMU_REG_BOOT && m_io->read(MMU_REG_BOOT) == 0x01)
-	{
-		mlibc_wrn("MMU::write(...), warning! Tried to write to $FF50 after bootstrap!");
 		return;
 	}
 
@@ -269,19 +293,34 @@ MemoryArea * MMU::getRAM(size_t index)
 	return m_ram[index];
 }
 
-MemoryArea * MMU::getIO()
+MemoryArea & MMU::getIRQ()
 {
-	return m_io;
+	return m_irq;
+}
+
+MemoryArea & MMU::getJoypad()
+{
+	return m_joy;
+}
+
+MemoryArea & MMU::getTimer()
+{
+	return m_timer;
+}
+
+MemoryArea & MMU::getPPU()
+{
+	return m_ppu;;
+}
+
+byte & MMU::getFF50()
+{
+	return m_ff50;
 }
 
 MemoryArea * MMU::getHRAM()
 {
 	return m_hram;
-}
-
-byte & MMU::getFFFF()
-{
-	return m_ffff;
 }
 
 }

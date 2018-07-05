@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include <vector>
+#include "alu.h"
 #include "cpu_registers.h"
 #include "cpu_state.h"
 
@@ -9,18 +10,15 @@ namespace hgb
 {
 
 class MMU;
-class ALU;
 
 class CPU
 {
 public:
 	CPU(
-		std::vector<word> breakpoints = std::vector<word>()
+		MMU & mmu
 	);
 	~CPU();
 
-	// Initialize the CPU
-	void init();
 	// Run the CPU, one instruction at a time
 	void tick();
 	// Handle normal opcode
@@ -34,16 +32,17 @@ public:
 	void LD_HL_SP_r8(int8_t n);
 	byte RST(byte op);
 
+	MMU & getMMU();
 	CPURegisters & getRegisters();
 	CPUState & getState();
-	MMU * getMMU();
-	ALU * getALU();
+	ALU & getALU();
+	std::vector<word> & getBreakpoints();
 private:
-	std::vector<word> m_breakpoints;
+	MMU & m_mmu;
 	CPURegisters m_registers;
 	CPUState m_state;
-	MMU * m_mmu;
-	ALU * m_alu;
+	ALU m_alu;
+	std::vector<word> m_breakpoints;
 };
 
 }
