@@ -23,7 +23,6 @@ MMU::MMU(
 	m_cart(nullptr),
 	m_bootrom(nullptr),
 	m_rom(),
-	m_vram(nullptr),
 	m_ram(),
 	m_irq(irq),
 	m_joy(joy),
@@ -41,9 +40,6 @@ MMU::MMU(
 	// Init ROM bank(s)
 	m_rom.push_back(new ROM(MMU_ROM_BANK_0, MMU_ROM_BANK_SZ));
 	m_rom.push_back(new ROM(MMU_ROM_BANK_X, MMU_ROM_BANK_SZ));
-
-	// Init VRAM
-	m_vram = new RAM(MMU_VRAM, MMU_VRAM_SZ);
 
 	// Init RAM bank(s)
 	m_ram.push_back(new RAM(MMU_RAM_BANK_0, MMU_RAM_BANK_SZ));
@@ -68,9 +64,6 @@ MMU::~MMU()
 	{
 		delete ma;
 	}
-
-	// Free VRAM from memory
-	delete m_vram;
 
 	// Free ROM banks from memory
 	for (auto ma : m_rom)
@@ -189,9 +182,9 @@ MemoryArea * MMU::map(word addr)
 		return m_rom[1];
 	}
 	// VRAM
-	else if (addr >= MMU_VRAM && addr < MMU_RAM_BANK_X)
+	else if (addr >= PPU_VRAM_S && addr <= PPU_VRAM_E)
 	{
-		return m_vram;
+		return dynamic_cast<PPU&>(m_ppu).getVRAM();
 	}
 	// RAM bank #x
 	else if (addr >= MMU_RAM_BANK_X && addr < MMU_RAM_BANK_0)
@@ -281,11 +274,6 @@ MemoryArea * MMU::getBootROM()
 MemoryArea * MMU::getROM(size_t index)
 {
 	return m_rom[index];
-}
-
-MemoryArea * MMU::getVRAM()
-{
-	return m_vram;
 }
 
 MemoryArea * MMU::getRAM(size_t index)

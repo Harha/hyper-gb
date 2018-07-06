@@ -6,6 +6,10 @@
 namespace hgb
 {
 
+#define PPU_VRAM_S		0x8000	// ppu vram start
+#define PPU_VRAM_E		0x9FFF	// ppu vram end
+#define PPU_VRAM		0x8000	// ppu vram
+#define PPU_VRAM_SZ		0x2000	// ppu vram size
 #define PPU_REG_S		0xFF40	// ppu memory area start
 #define PPU_REG_E		0xFF4B	// ppu memory area end
 #define PPU_REG_LCDC	0xFF40	// lcd control (R/W)
@@ -30,9 +34,12 @@ public:
 	// Run the PPU, one cycle at a time
 	void tick();
 
+	MemoryArea * getVRAM();
+
 	virtual byte read(word addr) override;
 	virtual void write(word addr, byte value) override;
 private:
+	MemoryArea * m_vram;
 	byte LCDC;
 	byte STAT;
 	byte SCY;

@@ -1,5 +1,6 @@
 #include "ppu.h"
 #include "3rdparty/mlibc_log.h"
+#include "mem/ram.h"
 
 namespace hgb
 {
@@ -22,17 +23,28 @@ PPU::PPU() :
 	WY(),
 	WX()
 {
+	// Init VRAM
+	m_vram = new RAM(PPU_VRAM, PPU_VRAM_SZ);
+
 	mlibc_dbg("PPU::PPU()");
 }
 
 PPU::~PPU()
 {
+	// Free VRAM
+	delete m_vram;
+
 	mlibc_dbg("PPU::~PPU()");
 }
 
 void PPU::tick()
 {
 	LY++;
+}
+
+MemoryArea * PPU::getVRAM()
+{
+	return m_vram;
 }
 
 byte PPU::read(word addr)

@@ -61,7 +61,6 @@ public:
 	Cartridge * getCart();
 	MemoryArea * getBootROM();
 	MemoryArea * getROM(size_t index);
-	MemoryArea * getVRAM();
 	MemoryArea * getRAM(size_t index);
 	MemoryArea & getIRQ();
 	MemoryArea & getJoypad();
@@ -73,7 +72,6 @@ private:
 	Cartridge * m_cart;
 	MemoryArea * m_bootrom;
 	std::vector<MemoryArea *> m_rom;
-	MemoryArea * m_vram;
 	std::vector<MemoryArea *> m_ram;
 	MemoryArea & m_irq;
 	MemoryArea & m_joy;
